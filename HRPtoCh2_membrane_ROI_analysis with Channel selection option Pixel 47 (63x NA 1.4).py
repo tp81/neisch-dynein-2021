@@ -141,7 +141,7 @@ import os
 outputFilePath = os.path.join(outputDir.getAbsolutePath(),'RESULTS.xls')
 if not os.path.exists(outputFilePath):
 	with open(outputFilePath,'w') as f:
-		f.write('Filename\tCH2_bkg\tHRP_mean_membrane\tCH2_mean_membrane\tratio_membrane\n')
+		f.write('Filename\tHRP_bkg\tCH2_bkg\tHRP_mean_membrane\tCH2_mean_membrane\tratio_membrane\n')
 
 with open(outputFilePath,'a') as f:
 	f.write('\t'.join([t, str(HRP_bkg), str(CH2_bkg), str(HRP_mean), str(CH2_mean), str(ratio)])+'\n')
