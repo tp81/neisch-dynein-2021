@@ -7,6 +7,9 @@
 
 # AUTHOR Thomas Pengo, tpengo@umn.edu, 2021
 
+# CHANGELOG
+# 2025.5.21 - fixed subBkg and ratio image to work with latest Fiji
+
 # PARAMETER
 regionSize = 47 # pixels (~10um)
 
@@ -16,6 +19,7 @@ from net.imglib2.img.display.imagej import ImageJFunctions
 from net.imglib2.view import Views
 from net.imglib2.roi import Regions, Masks, BinaryMaskRegionOfInterest
 from net.imglib2.type.logic import BitType
+from net.imglib2.type.numeric.integer import ShortType
 from net.imglib2.type.numeric.real import DoubleType
 from ij.plugin import Duplicator
 
@@ -81,13 +85,15 @@ HRP_m = ops.threshold().otsu(HRP)
 HRP_m_f = ops.convert().float32(HRP_m)
 
 # Subtract background
+from java.lang import Short
 def subBkg(im):
 	im_m_f = ops.convert().float32(ops.threshold().otsu(im))
 	out = ops.create().img(im_m_f)
 	im_m_f = ops.threshold().otsu(ops.run('invert',out,im_m_f,DoubleType(0),DoubleType(1)))
+	#bkg = Short.valueOf(int(ops.stats().mean(roi(im_m_f,im)).getRealFloat()))
 	bkg = ops.stats().mean(roi(im_m_f,im)).getRealFloat()
 
-	im_bkg_sub = ops.run('subtract',ops.convert().int16(im),bkg)
+	im_bkg_sub = ops.run('subtract',ops.convert().int16(im),ShortType(int(bkg)))
 
 	# Clip image to the input type
 	clipped = ops.create().img(im_bkg_sub, im.firstElement())
@@ -121,7 +127,7 @@ ratio = CH2_mean / HRP_mean
 
 
 #### RATIO IMAGE
-ratio_image = ops.eval('(membrane*CH2)/(membrane*HRP)',{
+ratio_image = ops.eval('membrane*CH2/membrane/HRP',{
 	'membrane' : ops.convert().float32(membrane),
 	'CH2' : ops.convert().float32(CH2),
 	'HRP'  : ops.convert().float32(HRP) })
