@@ -31,10 +31,10 @@ IJ.setAutoThreshold(c1, "Moments dark stack no-reset")
 IJ.run(c1, "Convert to Mask", "black")
 mask_1 = c1
 
-# BKG SUB RAD=5
+# BKG SUB RAD=2
 c2_0 = c2.duplicate()
 c2_0.setTitle('TOQUANT')
-IJ.run(c2, "Subtract Background...", "rolling=5 stack");
+IJ.run(c2, "Subtract Background...", "rolling=2 stack");
 
 # CONTRAST STRETCH 0-65535 -> 8-bit
 c2.getProcessor().setMinAndMax(0,65535)
