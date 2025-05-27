@@ -1,8 +1,14 @@
 #@ OpService ops
 #@ File inputFile
 #@ File(style='directory') outputDir
+#@ String (choices={"8-bit","12-bit","14-bit","16-bit"}, style="listBox",value="12-bit",label="Image bitdepth") maxValueS
 
 # AUTHOR Thomas Pengo, tpengo@umn.edu, 2021
+
+# CHANGELOG
+#   2025.05.27
+#       - Make normalization value a dropdown to cater for 12, 14 and 16 bit images. 
+#       - Generalize image extension to last characters after "."
 
 from ij import IJ
 from loci.plugins import BF
@@ -11,11 +17,19 @@ from net.imglib2.algorithm.neighborhood import RectangleShape
 from net.imglib2.img.array import ArrayImgs
 from ij.plugin import ImageCalculator
 
+extension = "."+inputFile.getName().rsplit(".")[-1]
+IJ.log("Image extension detected as: "+extension)
+
 imp, = BF.openImagePlus(inputFile.getAbsolutePath())
 name = inputFile.getName()
 
 from ij.plugin import ChannelSplitter
-c1, c2 = ChannelSplitter.split(imp)
+channels = ChannelSplitter.split(imp)
+
+# Channel 1 is "0", 2 is "1", ...
+c2 = channels[0] # Channel with the spots to quantify
+c1 = channels[1] # Channel with the mask
+
 imp = c2
 
 import re
@@ -36,8 +50,10 @@ c2_0 = c2.duplicate()
 c2_0.setTitle('TOQUANT')
 IJ.run(c2, "Subtract Background...", "rolling=5 stack");
 
-# CONTRAST STRETCH 0-65535 -> 8-bit
-c2.getProcessor().setMinAndMax(0,65535)
+# CONTRAST STRETCH 0-maxValue -> 8-bit
+maxValue = 2**int(maxValueS.split("-"))-1
+IJ.log("Setting max value to "+maxValue)
+c2.getProcessor().setMinAndMax(0,maxValue)
 IJ.run(c2, "8-bit", "")
 
 # AUTO LOCAL THRESHOLD "BERNSEN" RAD 10
@@ -69,12 +85,12 @@ for i in range(rt.size()):
 	vol = rt.getValueAsDouble(0,i)
 	rt.setValue("EqSphereRadius",i,getRadius(vol))
 
-	for k in m.groupdict():
-		rt.setValue(k,i,m.groupdict()[k])
+#	for k in m.groupdict():
+#		rt.setValue(k,i,m.groupdict()[k])
 
-IJ.saveAsTiff(IJ.getImage(), "{}/{}".format(outputDir.getAbsolutePath(),imp.getTitle().replace('.czi','_objects.tiff')))
+IJ.saveAsTiff(IJ.getImage(), "{}/{}".format(outputDir.getAbsolutePath(),imp.getTitle().replace(extension,'_objects.tiff')))
 IJ.getImage().close()
 
-IJ.saveAs("Results", "{}/{}".format(outputDir.getAbsolutePath(),imp.getTitle().replace('.czi','_results.csv')))
+IJ.saveAs("Results", "{}/{}".format(outputDir.getAbsolutePath(),imp.getTitle().replace(extension,'_results.csv')))
 
 IJ.run("Close All")
