@@ -51,8 +51,8 @@ c2_0.setTitle('TOQUANT')
 IJ.run(c2, "Subtract Background...", "rolling=2 stack");
 
 # CONTRAST STRETCH 0-maxValue -> 8-bit
-maxValue = 2**int(maxValueS.split("-"))-1
-IJ.log("Setting max value to "+maxValue)
+maxValue = 2**int(maxValueS.split("-")[0])-1
+IJ.log("Setting max value to "+str(maxValue))
 c2.getProcessor().setMinAndMax(0,maxValue)
 IJ.run(c2, "8-bit", "")
 
@@ -94,3 +94,5 @@ IJ.getImage().close()
 IJ.saveAs("Results", "{}/{}".format(outputDir.getAbsolutePath(),imp.getTitle().replace(extension,'_results.csv')))
 
 IJ.run("Close All")
+
+IJ.log("Done!")
